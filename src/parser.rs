@@ -30,7 +30,7 @@ impl Parser {
         let mut word = String::new();
         loop {
             match self.chars[self.index..] {
-                [x, n, ..] if x == '.' && (n.is_numeric() || n == '_' || n == '.') => word.push(x),
+                [x, n, ..] if x == '.' && n.is_numeric() => word.push(x),
                 [x, ..] if x == '.' => break,
                 [x, ..] if !x.is_numeric() && x != '_' && x != '.' || x == '.' && word.contains('.') => break,
                 [x, ..] => word.push(x),
