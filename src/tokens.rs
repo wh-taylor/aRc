@@ -2,6 +2,7 @@
 pub enum Token {
     Identifier(String),
     Number(String),
+    EOF,
     Equal,
     Colon,
     LeftParen,
@@ -30,4 +31,9 @@ pub enum Token {
     LessThanEqual,
     GreaterThanEqual,
     BangEqual,
+}
+
+#[derive(Debug)]
+pub enum LexError {
+    UnrecognizedSymbol,
 }
