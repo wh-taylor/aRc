@@ -6,7 +6,7 @@ pub struct Parser {
 }
 
 impl Parser {
-    pub fn new(filename: String, code: String) -> Parser {
+    pub fn new(code: String) -> Parser {
         Parser {
             chars: code.chars().collect(),
             index: 0
@@ -41,7 +41,7 @@ impl Parser {
         Ok(Token::Number(word))
     }
 
-    pub fn next_token(&mut self) -> Result<Token, LexError> {
+    fn lex_symbol(&mut self) -> Result<Token, LexError> {
         match self.chars[self.index..] {
             [] => Ok(Token::EOF),
             ['-', '>', ..] => { self.index += 2; return Ok(Token::Arrow); },
@@ -72,13 +72,20 @@ impl Parser {
             ['.', ..] => { self.index += 1; return Ok(Token::Dot); },
             [',', ..] => { self.index += 1; return Ok(Token::Comma); },
             ['\'', ..] => { self.index += 1; return Ok(Token::Apostrophe); },
+            [..] => { self.index += 1; Err(LexError::UnrecognizedSymbol) },
+        }
+    }
+
+    pub fn next_token(&mut self) -> Result<Token, LexError> {
+        match self.chars[self.index..] {
+            [] => Ok(Token::EOF),
             [x, ..] if x.is_alphabetic() || x == '_' => self.lex_word(),
             [x, ..] if x.is_numeric() => self.lex_number(),
             [x, ..] if x.is_whitespace() => {
                 self.index += 1;
                 self.next_token()
             }
-            [..] => { self.index += 1; Err(LexError::UnrecognizedSymbol) },
+            [..] => self.lex_symbol(),
         }
     }
 }
