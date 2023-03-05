@@ -30,17 +30,13 @@ impl Parser {
         let mut word = String::new();
         loop {
             match self.chars[self.index..] {
+                [x, n, ..] if x == '.' && (n.is_numeric() || n == '_' || n == '.') => word.push(x),
+                [x, ..] if x == '.' => break,
                 [x, ..] if !x.is_numeric() && x != '_' && x != '.' || x == '.' && word.contains('.') => break,
-                [x, ..] if x == '.' => match self.chars[self.index + 1..] {
-                    [n, ..] if n.is_numeric() || n == '_' || n == '.' => continue,
-                    _ => break,
-                }
-                [x, ..] => {
-                    word.push(x);
-                    self.index += 1;
-                }
+                [x, ..] => word.push(x),
                 [..] => break,
             }
+            self.index += 1;
         }
         Some(Token::Number(word))
     }
