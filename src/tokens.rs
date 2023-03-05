@@ -22,7 +22,7 @@ pub enum Token {
     Dot,
     Arrow,
     BigArrow,
-    PlusMinus,
+    PlusOrMinus,
     Comma,
     Apostrophe,
     DoubleEqual,
