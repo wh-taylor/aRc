@@ -65,16 +65,17 @@ impl Parser {
         }
     }
 
-    pub fn next_token(&mut self) -> Result<Token, LexError> {
-        match self.chars[self.index..] {
+    pub fn iter_token(&mut self) {
+        self.token = match self.chars[self.index..] {
             [] => Ok(Token::EOF),
             [x, ..] if x.is_alphabetic() || x == '_' => self.lex_word(),
             [x, ..] if x.is_numeric() => self.lex_number(),
             [x, ..] if x.is_whitespace() => {
                 self.index += 1;
-                self.next_token()
+                self.iter_token();
+                return;
             }
             [..] => self.lex_symbol(),
-        }
+        };
     }
 }
