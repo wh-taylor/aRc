@@ -1,5 +1,6 @@
 mod nodes;
 mod tokens;
+mod lexer;
 mod parser;
 
 fn main() {
