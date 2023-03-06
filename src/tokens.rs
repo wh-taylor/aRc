@@ -1,4 +1,4 @@
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub enum Token {
     Identifier(String),
     Number(String),
@@ -33,7 +33,7 @@ pub enum Token {
     BangEqual,
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub enum LexError {
     UnrecognizedSymbol,
 }

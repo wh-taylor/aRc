@@ -1,3 +1,5 @@
+use crate::tokens::LexError;
+
 #[derive(Debug)]
 pub enum Expression {
     Number(usize, String),
@@ -24,4 +26,11 @@ pub enum Expression {
     And(usize, Box<Expression>, Box<Expression>),
     Or(usize, Box<Expression>, Box<Expression>),
     Not(usize, Box<Expression>),
+}
+
+#[derive(Debug)]
+pub enum ParseError {
+    LexError(LexError),
+    NumberExpected,
+    MissingClosingParenthesis,
 }

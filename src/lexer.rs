@@ -78,4 +78,8 @@ impl Parser {
             [..] => self.lex_symbol(),
         };
     }
+
+    pub fn token(&mut self) -> Result<Token, LexError> {
+        self.token.clone()
+    }
 }
