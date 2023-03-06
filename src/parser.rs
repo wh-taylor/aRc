@@ -262,14 +262,24 @@ impl Parser {
         }
     }
 
+    /// Implicit multiplication is treated as a function, where if the "function" part
+    /// turns out to be a function value, the function is executed, whereas if it is
+    /// a non-function value, the "function" is multiplied by its input.
     fn parse_implicit_multiplication(&mut self) -> Result<Expression, ParseError> {
-        let expr = self.parse_postfix()?;
-        match self.token() {
-            Ok( Token::Number(_)
-              | Token::Identifier(_)
-              | Token::LeftParen) => Ok(Expression::Multiply(self.index, Box::new(expr), Box::new(self.parse_implicit_multiplication()?))),
-            _ => Ok(expr),
+        let mut expr = self.parse_postfix()?;
+        loop {
+            match self.token() {
+                Ok( Token::Number(_)
+                  | Token::Identifier(_)
+                  | Token::LeftParen) => {
+                    let postfix = self.parse_postfix()?;
+                    expr = Expression::Function(self.index, Box::new(expr), Box::new(postfix));
+                },
+                Ok(_) => break,
+                Err(e) => return Err(ParseError::LexError(e)),
+            }
         }
+        Ok(expr)
     }
 
     fn parse_postfix(&mut self) -> Result<Expression, ParseError> {

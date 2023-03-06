@@ -4,7 +4,7 @@ use crate::tokens::LexError;
 pub enum Expression {
     Number(usize, String),
     Variable(usize, String),
-    Function(usize, String, Vec<Expression>),
+    Function(usize, Box<Expression>, Box<Expression>),
     Differentiate(usize, Box<Expression>),
     Percent(usize, Box<Expression>),
     Factorial(usize, Box<Expression>),
