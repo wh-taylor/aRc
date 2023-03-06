@@ -317,6 +317,8 @@ impl Parser {
                 Ok(Expression::Number(self.index, dividend, divisor))
             },
             Ok(Token::Identifier(id)) => Ok(Expression::Variable(self.index, id)),
+            Ok(Token::True) => Ok(Expression::Boolean(true)),
+            Ok(Token::False) => Ok(Expression::Boolean(false)),
             Ok(Token::LeftParen) => self.parse_parentheses(),
             Ok(_) => Err(ParseError::NumberExpected),
             Err(e) => Err(ParseError::LexError(e)),

@@ -17,6 +17,8 @@ impl Parser {
             "and" => Ok(Token::And),
             "or" => Ok(Token::Or),
             "not" => Ok(Token::Not),
+            "true" => Ok(Token::True),
+            "false" => Ok(Token::False),
             _ => Ok(Token::Identifier(word)),
         }
     }

@@ -5,6 +5,8 @@ pub enum Token {
     And,
     Or,
     Not,
+    True,
+    False,
     EOF,
     Equal,
     Colon,
