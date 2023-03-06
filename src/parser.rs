@@ -57,7 +57,7 @@ impl Parser {
     }
 
     fn parse_power(&mut self) -> Result<Expression, ParseError> {
-        let expr = self.parse_implicit_multiplication()?;
+        let expr = self.parse_negation()?;
         match self.token() {
             Ok(Token::Caret) => {
                 self.iter_token();
@@ -66,6 +66,16 @@ impl Parser {
             Ok(_) => Ok(expr),
             Err(e) => Err(ParseError::LexError(e)),
         }
+    }
+
+    fn parse_negation(&mut self) -> Result<Expression, ParseError> {
+        if !matches!(self.token(), Ok(Token::Minus)) {
+            return self.parse_implicit_multiplication();
+        }
+
+        self.iter_token();
+        let expr = self.parse_negation()?;
+        Ok(Expression::Negate(self.index, Box::new(expr)))
     }
 
     fn parse_implicit_multiplication(&mut self) -> Result<Expression, ParseError> {
