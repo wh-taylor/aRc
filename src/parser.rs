@@ -312,7 +312,10 @@ impl Parser {
 
     fn parse_atom(&mut self) -> Result<Expression, ParseError> {
         let expr: Expression = match self.token() {
-            Ok(Token::Number(n)) => Ok(Expression::Number(self.index, n)),
+            Ok(Token::Number(n)) => {
+                let (dividend, divisor) = to_quotient(n);
+                Ok(Expression::Number(self.index, dividend, divisor))
+            },
             Ok(Token::Identifier(id)) => Ok(Expression::Variable(self.index, id)),
             Ok(Token::LeftParen) => self.parse_parentheses(),
             Ok(_) => Err(ParseError::NumberExpected),
@@ -331,4 +334,23 @@ impl Parser {
             Err(ParseError::MissingClosingDelimiter)
         }
     }
+}
+
+fn to_quotient(number_string: String) -> (isize, isize) {
+    let mut dividend = String::new();
+    let mut divisor = 1;
+    let mut point_met = false;
+    for char in number_string.chars() {
+        match char {
+            n if n.is_numeric() => {
+                dividend.push(n);
+                if point_met {
+                    divisor *= 10;
+                }
+            },
+            '.' => point_met = true,
+            _ => {},
+        }
+    }
+    (dividend.parse::<isize>().unwrap(), divisor)
 }

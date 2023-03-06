@@ -2,7 +2,7 @@ use crate::tokens::LexError;
 
 #[derive(Clone, Debug)]
 pub enum Expression {
-    Number(usize, String),
+    Number(usize, isize, isize),
     Variable(usize, String),
     Function(usize, Box<Expression>, Box<Expression>),
     Differentiate(usize, Box<Expression>),
