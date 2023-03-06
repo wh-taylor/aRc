@@ -33,7 +33,7 @@ impl Parser {
     fn lex_symbol(&mut self) -> Result<Token, LexError> {
         match self.chars[self.index..] {
             [] => Ok(Token::EOF),
-            ['+', '/', '-', ..] => { self.index += 2; return Ok(Token::PlusOrMinus); },
+            ['+', '/', '-', ..] => { self.index += 3; return Ok(Token::PlusOrMinus); },
             ['-', '>', ..] => { self.index += 2; return Ok(Token::Arrow); },
             ['=', '>', ..] => { self.index += 2; return Ok(Token::BigArrow); },
             ['=', '=', ..] => { self.index += 2; return Ok(Token::DoubleEqual); },
