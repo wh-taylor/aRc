@@ -20,7 +20,37 @@ impl Parser {
     }
 
     pub fn parse(&mut self) -> Result<Expression, ParseError> {
-        self.parse_or()
+        self.parse_tuple()
+    }
+
+    fn parse_tuple(&mut self) -> Result<Expression, ParseError> {
+        let expr = self.parse_or()?;
+        match self.token() {
+            Ok(Token::Comma) => {},
+            _ => return Ok(expr)
+        }
+
+        let mut elements = Vec::<Expression>::new();
+        elements.push(expr);
+        loop {
+            match self.token() {
+                Ok(Token::Comma) => {
+                    self.iter_token();
+                    
+                    match self.token() {
+                        Ok(Token::RightParen | Token::RightBrace | Token::RightBracket | Token::EOF) => break,
+                        Ok(_) => {},
+                        Err(e) => return Err(ParseError::LexError(e)),
+                    }
+
+                    let or = self.parse_or()?;
+                    elements.push(or);
+                },
+                Ok(_) => break,
+                Err(e) => return Err(ParseError::LexError(e)),
+            }
+        }
+        Ok(Expression::Tuple(self.index, elements))
     }
 
     fn parse_or(&mut self) -> Result<Expression, ParseError> {
