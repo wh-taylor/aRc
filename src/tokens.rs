@@ -2,6 +2,9 @@
 pub enum Token {
     Identifier(String),
     Number(String),
+    And,
+    Or,
+    Not,
     EOF,
     Equal,
     Colon,

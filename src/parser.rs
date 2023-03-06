@@ -20,7 +20,39 @@ impl Parser {
     }
 
     pub fn parse(&mut self) -> Result<Expression, ParseError> {
-        self.parse_comparison()
+        self.parse_or()
+    }
+
+    fn parse_or(&mut self) -> Result<Expression, ParseError> {
+        let mut expr = self.parse_and()?;
+        loop {
+            match self.token() {
+                Ok(Token::Or) => {
+                    self.iter_token();
+                    let and = self.parse_and()?;
+                    expr = Expression::Or(self.index, Box::new(expr), Box::new(and));
+                },
+                Ok(_) => break,
+                Err(e) => return Err(ParseError::LexError(e)),
+            }
+        }
+        Ok(expr)
+    }
+
+    fn parse_and(&mut self) -> Result<Expression, ParseError> {
+        let mut expr = self.parse_comparison()?;
+        loop {
+            match self.token() {
+                Ok(Token::And) => {
+                    self.iter_token();
+                    let comparison = self.parse_comparison()?;
+                    expr = Expression::And(self.index, Box::new(expr), Box::new(comparison));
+                },
+                Ok(_) => break,
+                Err(e) => return Err(ParseError::LexError(e)),
+            }
+        }
+        Ok(expr)
     }
 
     fn parse_comparison(&mut self) -> Result<Expression, ParseError> {
@@ -146,6 +178,11 @@ impl Parser {
                 self.iter_token();
                 let expr = self.parse_prefix()?;
                 Ok(Expression::PlusMinus(self.index, Box::new(expr)))
+            },
+            Ok(Token::Not) => {
+                self.iter_token();
+                let expr = self.parse_prefix()?;
+                Ok(Expression::Not(self.index, Box::new(expr)))
             }
             Ok(_) => self.parse_implicit_multiplication(),
             Err(e) => Err(ParseError::LexError(e)),

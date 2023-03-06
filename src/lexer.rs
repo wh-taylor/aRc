@@ -10,8 +10,14 @@ impl Parser {
                     word.push(x);
                     self.index += 1;
                 },
-                _ => break Ok(Token::Identifier(word)),
+                _ => break,
             }
+        }
+        match word.as_str() {
+            "and" => Ok(Token::And),
+            "or" => Ok(Token::Or),
+            "not" => Ok(Token::Not),
+            _ => Ok(Token::Identifier(word)),
         }
     }
 
