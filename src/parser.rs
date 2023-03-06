@@ -20,7 +20,31 @@ impl Parser {
     }
 
     pub fn parse(&mut self) -> Result<Expression, ParseError> {
-        self.parse_atom()
+        self.parse_implicit_multiplication()
+    }
+
+    fn parse_implicit_multiplication(&mut self) -> Result<Expression, ParseError> {
+        let expr = self.parse_postfix()?;
+        match self.token() {
+            Ok( Token::Number(_)
+              | Token::Identifier(_)
+              | Token::LeftParen) => Ok(Expression::Multiply(self.index, Box::new(expr), Box::new(self.parse_implicit_multiplication()?))),
+            _ => Ok(expr),
+        }
+    }
+
+    fn parse_postfix(&mut self) -> Result<Expression, ParseError> {
+        let mut expr = self.parse_atom()?;
+        loop {
+            match self.token() {
+                Ok(Token::Bang) => expr = Expression::Factorial(self.index, Box::new(expr)),
+                Ok(Token::Percent) => expr = Expression::Percent(self.index, Box::new(expr)),
+                Ok(_) => break,
+                Err(e) => return Err(ParseError::LexError(e)),
+            }
+            self.iter_token();
+        }
+        Ok(expr)
     }
 
     fn parse_atom(&mut self) -> Result<Expression, ParseError> {
@@ -32,10 +56,7 @@ impl Parser {
             Err(e) => Err(ParseError::LexError(e)),
         }?;
         self.iter_token();
-        match self.token() {
-            Ok(Token::Number(_) | Token::Identifier(_) | Token::LeftParen) => Ok(Expression::Multiply(self.index, Box::new(expr), Box::new(self.parse_atom()?))),
-            _ => Ok(expr),
-        }
+        Ok(expr)
     }
 
     fn parse_parentheses(&mut self) -> Result<Expression, ParseError> {
