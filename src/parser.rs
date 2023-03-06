@@ -87,37 +87,80 @@ impl Parser {
 
     fn parse_comparison(&mut self) -> Result<Expression, ParseError> {
         let mut expr = self.parse_addition()?;
+        let mut prev_rvalue: Expression;
+
+        match self.token() {
+            Ok(Token::DoubleEqual) => {
+                self.iter_token();
+                prev_rvalue = self.parse_addition()?;
+                expr = Expression::Equal(self.index, Box::new(expr), Box::new(prev_rvalue.clone()));
+            },
+            Ok(Token::BangEqual) => {
+                self.iter_token();
+                prev_rvalue = self.parse_addition()?;
+                expr = Expression::NotEqual(self.index, Box::new(expr), Box::new(prev_rvalue.clone()));
+            },
+            Ok(Token::LessThan) => {
+                self.iter_token();
+                prev_rvalue = self.parse_addition()?;
+                expr = Expression::LessThan(self.index, Box::new(expr), Box::new(prev_rvalue.clone()));
+            },
+            Ok(Token::GreaterThan) => {
+                self.iter_token();
+                prev_rvalue = self.parse_addition()?;
+                expr = Expression::GreaterThan(self.index, Box::new(expr), Box::new(prev_rvalue.clone()));
+            },
+            Ok(Token::LessThanEqual) => {
+                self.iter_token();
+                prev_rvalue = self.parse_addition()?;
+                expr = Expression::LessThanEqual(self.index, Box::new(expr), Box::new(prev_rvalue.clone()));
+            },
+            Ok(Token::GreaterThanEqual) => {
+                self.iter_token();
+                prev_rvalue = self.parse_addition()?;
+                expr = Expression::GreaterThanEqual(self.index, Box::new(expr), Box::new(prev_rvalue.clone()));
+            },
+            Ok(_) => return Ok(expr),
+            Err(e) => return Err(ParseError::LexError(e)),
+        }
+
         loop {
             match self.token() {
                 Ok(Token::DoubleEqual) => {
                     self.iter_token();
                     let addition = self.parse_addition()?;
-                    expr = Expression::Equal(self.index, Box::new(expr), Box::new(addition));
+                    expr = Expression::And(self.index, Box::new(expr), Box::new(Expression::Equal(self.index, Box::new(prev_rvalue.clone()), Box::new(addition.clone()))));
+                    prev_rvalue = addition;
                 },
                 Ok(Token::BangEqual) => {
                     self.iter_token();
                     let addition = self.parse_addition()?;
-                    expr = Expression::NotEqual(self.index, Box::new(expr), Box::new(addition));
+                    expr = Expression::And(self.index, Box::new(expr), Box::new(Expression::NotEqual(self.index, Box::new(prev_rvalue.clone()), Box::new(addition.clone()))));
+                    prev_rvalue = addition;
                 },
                 Ok(Token::LessThan) => {
                     self.iter_token();
                     let addition = self.parse_addition()?;
-                    expr = Expression::LessThan(self.index, Box::new(expr), Box::new(addition));
+                    expr = Expression::And(self.index, Box::new(expr), Box::new(Expression::LessThan(self.index, Box::new(prev_rvalue.clone()), Box::new(addition.clone()))));
+                    prev_rvalue = addition;
                 },
                 Ok(Token::GreaterThan) => {
                     self.iter_token();
                     let addition = self.parse_addition()?;
-                    expr = Expression::GreaterThan(self.index, Box::new(expr), Box::new(addition));
+                    expr = Expression::And(self.index, Box::new(expr), Box::new(Expression::GreaterThan(self.index, Box::new(prev_rvalue.clone()), Box::new(addition.clone()))));
+                    prev_rvalue = addition;
                 },
                 Ok(Token::LessThanEqual) => {
                     self.iter_token();
                     let addition = self.parse_addition()?;
-                    expr = Expression::LessThanEqual(self.index, Box::new(expr), Box::new(addition));
+                    expr = Expression::And(self.index, Box::new(expr), Box::new(Expression::LessThanEqual(self.index, Box::new(prev_rvalue.clone()), Box::new(addition.clone()))));
+                    prev_rvalue = addition;
                 },
                 Ok(Token::GreaterThanEqual) => {
                     self.iter_token();
                     let addition = self.parse_addition()?;
-                    expr = Expression::GreaterThanEqual(self.index, Box::new(expr), Box::new(addition));
+                    expr = Expression::And(self.index, Box::new(expr), Box::new(Expression::GreaterThanEqual(self.index, Box::new(prev_rvalue.clone()), Box::new(addition.clone()))));
+                    prev_rvalue = addition;
                 },
                 Ok(_) => break,
                 Err(e) => return Err(ParseError::LexError(e)),

@@ -1,6 +1,6 @@
 use crate::tokens::LexError;
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub enum Expression {
     Number(usize, String),
     Variable(usize, String),
