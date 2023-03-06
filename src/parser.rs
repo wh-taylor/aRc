@@ -20,7 +20,33 @@ impl Parser {
     }
 
     pub fn parse(&mut self) -> Result<Expression, ParseError> {
-        self.parse_composition()
+        self.parse_addition()
+    }
+
+    fn parse_addition(&mut self) -> Result<Expression, ParseError> {
+        let mut expr = self.parse_composition()?;
+        loop {
+            match self.token() {
+                Ok(Token::Plus) => {
+                    self.iter_token();
+                    let composition = self.parse_composition()?;
+                    expr = Expression::Add(self.index, Box::new(expr), Box::new(composition));
+                }
+                Ok(Token::Minus) => {
+                    self.iter_token();
+                    let composition = self.parse_composition()?;
+                    expr = Expression::Subtract(self.index, Box::new(expr), Box::new(composition));
+                }
+                Ok(Token::PlusOrMinus) => {
+                    self.iter_token();
+                    let composition = self.parse_composition()?;
+                    expr = Expression::Add(self.index, Box::new(expr), Box::new(Expression::PlusMinus(self.index, Box::new(composition))));
+                }
+                Ok(_) => break,
+                Err(e) => return Err(ParseError::LexError(e)),
+            }
+        }
+        Ok(expr)
     }
 
     fn parse_composition(&mut self) -> Result<Expression, ParseError> {
