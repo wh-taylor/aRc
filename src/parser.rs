@@ -20,7 +20,19 @@ impl Parser {
     }
 
     pub fn parse(&mut self) -> Result<Expression, ParseError> {
-        self.parse_implicit_multiplication()
+        self.parse_power()
+    }
+
+    fn parse_power(&mut self) -> Result<Expression, ParseError> {
+        let expr = self.parse_implicit_multiplication()?;
+        match self.token() {
+            Ok(Token::Caret) => {
+                self.iter_token();
+                Ok(Expression::Power(self.index, Box::new(expr), Box::new(self.parse_power()?)))
+            },
+            Ok(_) => Ok(expr),
+            Err(e) => Err(ParseError::LexError(e)),
+        }
     }
 
     fn parse_implicit_multiplication(&mut self) -> Result<Expression, ParseError> {
