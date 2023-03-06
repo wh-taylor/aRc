@@ -27,6 +27,7 @@ impl Evaluator {
     fn evaluate_atom(&mut self, expr: Expression) -> Vec<Value> {
         match expr {
             Expression::Number(_, dividend, divisor) => vec![Value::ComplexNumber(dividend, divisor, 0, 1)],
+            Expression::Boolean(b) => vec![Value::Boolean(b)],
             _ => vec![],
         }
     }
