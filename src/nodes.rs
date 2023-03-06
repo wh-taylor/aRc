@@ -32,5 +32,5 @@ pub enum Expression {
 pub enum ParseError {
     LexError(LexError),
     NumberExpected,
-    MissingClosingParenthesis,
+    MissingClosingBracket,
 }

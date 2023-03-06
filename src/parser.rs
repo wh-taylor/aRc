@@ -65,7 +65,7 @@ impl Parser {
         if let Ok(Token::RightParen) = self.token() {
             Ok(expr)
         } else {
-            Err(ParseError::MissingClosingParenthesis)
+            Err(ParseError::MissingClosingBracket)
         }
     }
 }
