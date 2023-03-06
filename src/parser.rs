@@ -20,7 +20,19 @@ impl Parser {
     }
 
     pub fn parse(&mut self) -> Result<Expression, ParseError> {
-        self.parse_multiplication()
+        self.parse_composition()
+    }
+
+    fn parse_composition(&mut self) -> Result<Expression, ParseError> {
+        let expr = self.parse_multiplication()?;
+        match self.token() {
+            Ok(Token::Dot) => {
+                self.iter_token();
+                Ok(Expression::Compose(self.index, Box::new(expr), Box::new(self.parse_composition()?)))
+            },
+            Ok(_) => Ok(expr),
+            Err(e) => Err(ParseError::LexError(e)),
+        }
     }
 
     fn parse_multiplication(&mut self) -> Result<Expression, ParseError> {
