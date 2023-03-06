@@ -20,7 +20,21 @@ impl Parser {
     }
 
     pub fn parse(&mut self) -> Result<Expression, ParseError> {
-        self.parse_tuple()
+        self.parse_define()
+    }
+
+    fn parse_define(&mut self) -> Result<Expression, ParseError> {
+        let mut expr = self.parse_tuple()?;
+        match self.token() {
+            Ok(Token::Equal) => {
+                self.iter_token();
+                let expression = self.parse_tuple()?;
+                expr = Expression::Define(self.index, Box::new(expr), Box::new(expression));
+                Ok(expr)
+            },
+            Ok(_) => Ok(expr),
+            Err(e) => Err(ParseError::LexError(e)),
+        }
     }
 
     fn parse_tuple(&mut self) -> Result<Expression, ParseError> {
