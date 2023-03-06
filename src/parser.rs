@@ -20,7 +20,48 @@ impl Parser {
     }
 
     pub fn parse(&mut self) -> Result<Expression, ParseError> {
-        self.parse_addition()
+        self.parse_comparison()
+    }
+
+    fn parse_comparison(&mut self) -> Result<Expression, ParseError> {
+        let mut expr = self.parse_addition()?;
+        loop {
+            match self.token() {
+                Ok(Token::DoubleEqual) => {
+                    self.iter_token();
+                    let addition = self.parse_addition()?;
+                    expr = Expression::Equal(self.index, Box::new(expr), Box::new(addition));
+                },
+                Ok(Token::BangEqual) => {
+                    self.iter_token();
+                    let addition = self.parse_addition()?;
+                    expr = Expression::NotEqual(self.index, Box::new(expr), Box::new(addition));
+                },
+                Ok(Token::LessThan) => {
+                    self.iter_token();
+                    let addition = self.parse_addition()?;
+                    expr = Expression::LessThan(self.index, Box::new(expr), Box::new(addition));
+                },
+                Ok(Token::GreaterThan) => {
+                    self.iter_token();
+                    let addition = self.parse_addition()?;
+                    expr = Expression::GreaterThan(self.index, Box::new(expr), Box::new(addition));
+                },
+                Ok(Token::LessThanEqual) => {
+                    self.iter_token();
+                    let addition = self.parse_addition()?;
+                    expr = Expression::LessThanEqual(self.index, Box::new(expr), Box::new(addition));
+                },
+                Ok(Token::GreaterThanEqual) => {
+                    self.iter_token();
+                    let addition = self.parse_addition()?;
+                    expr = Expression::GreaterThanEqual(self.index, Box::new(expr), Box::new(addition));
+                },
+                Ok(_) => break,
+                Err(e) => return Err(ParseError::LexError(e)),
+            }
+        }
+        Ok(expr)
     }
 
     fn parse_addition(&mut self) -> Result<Expression, ParseError> {
