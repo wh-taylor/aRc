@@ -20,7 +20,28 @@ impl Parser {
     }
 
     pub fn parse(&mut self) -> Result<Expression, ParseError> {
-        self.parse_power()
+        self.parse_multiplication()
+    }
+
+    fn parse_multiplication(&mut self) -> Result<Expression, ParseError> {
+        let mut expr = self.parse_power()?;
+        loop {
+            match self.token() {
+                Ok(Token::Star) => {
+                    self.iter_token();
+                    let power = self.parse_power()?;
+                    expr = Expression::Multiply(self.index, Box::new(expr), Box::new(power));
+                }
+                Ok(Token::Slash) => {
+                    self.iter_token();
+                    let power = self.parse_power()?;
+                    expr = Expression::Divide(self.index, Box::new(expr), Box::new(power));
+                }
+                Ok(_) => break,
+                Err(e) => return Err(ParseError::LexError(e)),
+            }
+        }
+        Ok(expr)
     }
 
     fn parse_power(&mut self) -> Result<Expression, ParseError> {
