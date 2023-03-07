@@ -1,9 +1,11 @@
+use crate::nodes::Expression;
 use gcd::Gcd;
 
 #[derive(Clone)]
 pub enum Value {
     ComplexNumber(isize, isize, isize, isize),
     Boolean(bool),
+    Function(Expression, Expression),
 }
 
 impl std::fmt::Debug for Value {
@@ -27,6 +29,7 @@ impl std::fmt::Debug for Value {
             },
             Self::Boolean(true) => write!(f, "true : B"),
             Self::Boolean(false) => write!(f, "false : B"),
+            Self::Function(_, _) => write!(f, "function"),
         }
     }
 }

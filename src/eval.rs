@@ -28,6 +28,7 @@ impl Evaluator {
     fn evaluate_expression(&self, expr: Expression) -> Vec<Value> {
         let mut values = Vec::<Value>::new();
         match expr {
+            Expression::Closure(_, x, f) => values.push(Value::Function(*x, *f)),
             Expression::Add(_, x, y) => values.extend(self.eval2(&add, *x, *y)),
             Expression::Number(_, dividend, divisor) => values.push(Value::ComplexNumber(dividend, divisor, 0, 1)),
             Expression::Boolean(b) => values.push(Value::Boolean(b)),
