@@ -1,20 +1,16 @@
+use std::collections::HashMap;
 use crate::nodes::Expression;
 use crate::values::Value;
 use crate::values::gcd;
 
 pub struct Evaluator {
-    definition: Vec<Definition>,
-}
-
-struct Definition {
-    name: String,
-    expr: Expression,
+    definitions: HashMap<String, Expression>,
 }
 
 impl Evaluator {
     pub fn new() -> Evaluator {
         Evaluator {
-            definition: Vec::new(),
+            definitions: HashMap::new(),
         }
     }
 
@@ -30,21 +26,34 @@ impl Evaluator {
         }
     }
 
-    fn evaluate_expression(&self, expr: Expression) -> Vec<Value> {
+    fn evaluate_expression(&mut self, expr: Expression) -> Vec<Value> {
         let mut values = Vec::<Value>::new();
         match expr {
+            Expression::Define(_, l, r) => {
+                if let Expression::Variable(_, name) = *l {
+                    self.definitions.insert(name, *r.clone());
+                    values.extend(self.evaluate_expression(*r));
+                }
+            }
             Expression::Closure(_, x, f) => values.push(Value::Function(*x, *f)),
             Expression::Multiply(_, x, y) => values.extend(self.eval2(&multiply, *x, *y)),
             Expression::Add(_, x, y) => values.extend(self.eval2(&add, *x, *y)),
             Expression::Number(_, dividend, divisor) => values.push(Value::ComplexNumber(dividend, divisor, 0, 1)),
             Expression::ImaginaryConstant(_) => values.push(Value::ComplexNumber(0, 1, 1, 1)),
+            Expression::Variable(_, name) => {
+                let result = self.definitions.get(&name);
+                match result {
+                    Some(expr) => values.extend(self.evaluate_expression(expr.clone())),
+                    None => {},
+                }
+            },
             Expression::Boolean(b) => values.push(Value::Boolean(b)),
             _ => {},
         }
         values
     }
 
-    fn eval2(&self, f: &dyn Fn(Value, Value) -> Value, x_expr: Expression, y_expr: Expression) -> Vec<Value> {
+    fn eval2(&mut self, f: &dyn Fn(Value, Value) -> Value, x_expr: Expression, y_expr: Expression) -> Vec<Value> {
         let x_values = self.evaluate_expression(x_expr);
         let y_values = self.evaluate_expression(y_expr);
         let mut values = Vec::<Value>::new();
