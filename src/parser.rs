@@ -297,6 +297,10 @@ impl Parser {
             match self.token() {
                 Ok( Token::Number(_)
                   | Token::Identifier(_)
+                  | Token::ImaginaryConstant
+                  | Token::PiConstant
+                  | Token::EulerConstant
+                  | Token::PhiConstant
                   | Token::LeftParen) => {
                     let postfix = self.parse_postfix()?;
                     expr = Expression::Function(self.index, Box::new(expr), Box::new(postfix));
