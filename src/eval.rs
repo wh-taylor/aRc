@@ -60,6 +60,7 @@ impl Evaluator {
             },
             Expression::Negate(_, x) => values.extend(self.eval1(&negate, *x)),
             Expression::Add(_, x, y) => values.extend(self.eval2(&add, *x, *y)),
+            Expression::Subtract(_, x, y) => values.extend(self.eval2(&subtract, *x, *y)),
             Expression::Number(_, dividend, divisor) => values.push(Value::ComplexNumber(dividend, divisor, 0, 1)),
             Expression::ImaginaryConstant(_) => values.push(Value::ComplexNumber(0, 1, 1, 1)),
             Expression::Variable(_, name) => {
@@ -161,6 +162,27 @@ fn add(x: Value, y: Value) -> Value {
             let cf1 = c1 * (lcmi / d1);
             let cf2 = c2 * (lcmi / d2);
             let cf = cf1 + cf2;
+            Value::ComplexNumber(af, bf, cf, df)
+        },
+        _ => Value::ComplexNumber(0, 1, 0, 1),
+    }
+}
+
+fn subtract(x: Value, y: Value) -> Value {
+    match (x, y) {
+        (Value::ComplexNumber(a1, b1, c1, d1), Value::ComplexNumber(a2, b2, c2, d2)) => {
+            // Real Segment
+            let lcm = b1 * gcd(b1, b2) / b2;
+            let bf = lcm;
+            let af1 = a1 * (lcm / b1);
+            let af2 = a2 * (lcm / b2);
+            let af = af1 - af2;
+            // Imaginary Segment
+            let lcmi = d1 * gcd(d1, d2) / d2;
+            let df = lcm;
+            let cf1 = c1 * (lcmi / d1);
+            let cf2 = c2 * (lcmi / d2);
+            let cf = cf1 - cf2;
             Value::ComplexNumber(af, bf, cf, df)
         },
         _ => Value::ComplexNumber(0, 1, 0, 1),
