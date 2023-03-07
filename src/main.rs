@@ -4,7 +4,9 @@ mod lexer;
 mod parser;
 mod values;
 mod eval;
+mod repl;
 
 fn main() {
-    println!("Hello, world!");
+    let mut repl = repl::Repl::new();
+    repl.init();
 }
