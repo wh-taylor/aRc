@@ -24,13 +24,25 @@ impl Parser {
     }
 
     fn parse_define(&mut self) -> Result<Expression, ParseError> {
-        let mut expr = self.parse_tuple()?;
+        let mut expr = self.parse_closure()?;
         match self.token() {
             Ok(Token::Equal) => {
                 self.iter_token();
-                let expression = self.parse_tuple()?;
+                let expression = self.parse_closure()?;
                 expr = Expression::Define(self.index, Box::new(expr), Box::new(expression));
                 Ok(expr)
+            },
+            Ok(_) => Ok(expr),
+            Err(e) => Err(ParseError::LexError(e)),
+        }
+    }
+
+    fn parse_closure(&mut self) -> Result<Expression, ParseError> {
+        let expr = self.parse_tuple()?;
+        match self.token() {
+            Ok(Token::BigArrow) => {
+                self.iter_token();
+                Ok(Expression::Closure(self.index, Box::new(expr), Box::new(self.parse_tuple()?)))
             },
             Ok(_) => Ok(expr),
             Err(e) => Err(ParseError::LexError(e)),

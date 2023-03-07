@@ -27,7 +27,8 @@ pub enum Expression {
     And(usize, Box<Expression>, Box<Expression>),
     Or(usize, Box<Expression>, Box<Expression>),
     Not(usize, Box<Expression>),
-    Define(usize, Box<Expression>, Box<Expression>)
+    Closure(usize, Box<Expression>, Box<Expression>),
+    Define(usize, Box<Expression>, Box<Expression>),
 }
 
 #[derive(Debug)]
