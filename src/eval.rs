@@ -40,7 +40,7 @@ impl Evaluator {
                 }
             },
             Expression::Function(_, f, x) => {
-                let function = self.evaluate_expression(*f)[0].clone();
+                let function = self.evaluate_expression(*f.clone())[0].clone();
                 match function {
                     Value::Function(input, closure) => {
                         if let Expression::Variable(_, name) = input {
@@ -48,7 +48,7 @@ impl Evaluator {
                             values.extend(self.evaluate_expression(closure));
                         }
                     },
-                    _ => {},
+                    _ => values.extend(self.eval2(&multiply, *f, *x)),
                 }
             },
             
