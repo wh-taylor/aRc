@@ -29,7 +29,7 @@ impl std::fmt::Debug for Value {
             },
             Self::Boolean(true) => write!(f, "true : B"),
             Self::Boolean(false) => write!(f, "false : B"),
-            Self::Function(_, _) => write!(f, "function"),
+            Self::Function(a, b) => write!(f, "function {:?} -> {:?}", a, b),
         }
     }
 }
