@@ -1,5 +1,6 @@
 use gcd::Gcd;
 
+#[derive(Clone)]
 pub enum Value {
     ComplexNumber(isize, isize, isize, isize),
     Boolean(bool),
@@ -30,7 +31,7 @@ impl std::fmt::Debug for Value {
     }
 }
 
-fn gcd(x: isize, y: isize) -> isize {
+pub fn gcd(x: isize, y: isize) -> isize {
     (x.abs() as usize).gcd(y.abs() as usize) as isize
         * (x / x.abs()) * (y / y.abs())
 }
