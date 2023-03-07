@@ -54,6 +54,7 @@ impl Evaluator {
             
             Expression::Closure(_, x, f) => values.push(Value::Function(*x, *f)),
             Expression::Multiply(_, x, y) => values.extend(self.eval2(&multiply, *x, *y)),
+            Expression::Divide(_, x, y) => values.extend(self.eval2(&divide, *x, *y)),
             Expression::PlusMinus(_, x) => {
                 values.extend(self.eval1(&negate, *x.clone()));
                 values.extend(self.eval1(&|x| x, *x));
@@ -131,6 +132,20 @@ fn multiply(x: Value, y: Value) -> Value {
             let af = a1 * a2 * d1 * d2 - c1 * c2 * b1 * b2;
             let bf = b1 * b2 * d1 * d2;
             let cf = a1 * c2 * b2 * d1 + a2 * c1 * b1 * d2;
+            let df = bf;
+            Value::ComplexNumber(af, bf, cf, df)
+        },
+        _ => Value::ComplexNumber(0, 1, 0, 1),
+    }
+}
+
+fn divide(x: Value, y: Value) -> Value {
+    match (x, y) {
+        (Value::ComplexNumber(a1, b1, c1, d1), Value::ComplexNumber(a2, b2, c2, d2)) => {
+            // Real Segment
+            let af = b2 * d2 * (a1 * a2 * d1 * d2 + c1 * c2 * b1 * b2);
+            let bf = b1 * d1 * (a2 * a2 * d2 * d2 + c2 * c2 * b2 * b2);
+            let cf = b2 * d2 * (a2 * c1 * b1 * d2 + a1 * c2 * d1 * b2);
             let df = bf;
             Value::ComplexNumber(af, bf, cf, df)
         },

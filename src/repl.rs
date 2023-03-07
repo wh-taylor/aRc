@@ -7,7 +7,7 @@ pub struct Repl {
 
 impl Repl {
     pub fn new() -> Repl {
-        let mut evaluator = Evaluator::new();
+        let evaluator = Evaluator::new();
         Repl { evaluator }
     }
 
