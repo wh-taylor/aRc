@@ -42,7 +42,7 @@ impl Parser {
         match self.token() {
             Ok(Token::BigArrow) => {
                 self.iter_token();
-                Ok(Expression::Closure(self.index, Box::new(expr), Box::new(self.parse_tuple()?)))
+                Ok(Expression::Closure(self.index, Box::new(expr), Box::new(self.parse_closure()?)))
             },
             Ok(_) => Ok(expr),
             Err(e) => Err(ParseError::LexError(e)),
