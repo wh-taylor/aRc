@@ -4,13 +4,13 @@ use crate::values::Value;
 use crate::values::gcd;
 
 pub struct Evaluator {
-    definitions: HashMap<String, Expression>,
+    definitions: Vec<HashMap<String, Expression>>,
 }
 
 impl Evaluator {
     pub fn new() -> Evaluator {
         Evaluator {
-            definitions: HashMap::new(),
+            definitions: vec![HashMap::new()],
         }
     }
 
@@ -31,7 +31,10 @@ impl Evaluator {
         match expr {
             Expression::Define(_, l, r) => {
                 if let Expression::Variable(_, name) = *l {
-                    self.definitions.insert(name, *r.clone());
+                    match self.definitions.last_mut() {
+                        Some(map) => {map.insert(name, *r.clone());},
+                        None => {},
+                    }
                     values.extend(self.evaluate_expression(*r));
                 }
             }
@@ -41,7 +44,7 @@ impl Evaluator {
             Expression::Number(_, dividend, divisor) => values.push(Value::ComplexNumber(dividend, divisor, 0, 1)),
             Expression::ImaginaryConstant(_) => values.push(Value::ComplexNumber(0, 1, 1, 1)),
             Expression::Variable(_, name) => {
-                let result = self.definitions.get(&name);
+                let result = self.get_definition(name);
                 match result {
                     Some(expr) => values.extend(self.evaluate_expression(expr.clone())),
                     None => {},
@@ -51,6 +54,24 @@ impl Evaluator {
             _ => {},
         }
         values
+    }
+
+    fn get_definition(&self, name: String) -> Option<Expression> {
+        for scope in self.definitions.iter().rev() {
+            match scope.get(&name) {
+                Some(x) => return Some(x.clone()),
+                None => continue,
+            }
+        }
+        None
+    }
+
+    fn increase_scope(&mut self) {
+        self.definitions.push(HashMap::new());
+    }
+
+    fn decrease_scope(&mut self) {
+        self.definitions.pop();
     }
 
     fn eval2(&mut self, f: &dyn Fn(Value, Value) -> Value, x_expr: Expression, y_expr: Expression) -> Vec<Value> {
