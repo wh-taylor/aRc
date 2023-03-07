@@ -17,7 +17,7 @@ impl Repl {
         loop {
             let input = self.get_input();
             let values = self.evaluator.evaluate(input);
-            println!("{:?}", values);
+            println!("{:?}\n", values);
         }
     }
 
