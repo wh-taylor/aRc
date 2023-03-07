@@ -3,13 +3,18 @@ use crate::values::Value;
 use crate::values::gcd;
 
 pub struct Evaluator {
-    
+    definition: Vec<Definition>,
+}
+
+struct Definition {
+    name: String,
+    expr: Expression,
 }
 
 impl Evaluator {
     pub fn new() -> Evaluator {
         Evaluator {
-            
+            definition: Vec::new(),
         }
     }
 
