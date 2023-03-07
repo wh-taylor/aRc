@@ -54,6 +54,11 @@ impl Evaluator {
             
             Expression::Closure(_, x, f) => values.push(Value::Function(*x, *f)),
             Expression::Multiply(_, x, y) => values.extend(self.eval2(&multiply, *x, *y)),
+            Expression::PlusMinus(_, x) => {
+                values.extend(self.eval1(&negate, *x.clone()));
+                values.extend(self.eval1(&|x| x, *x));
+            },
+            Expression::Negate(_, x) => values.extend(self.eval1(&negate, *x)),
             Expression::Add(_, x, y) => values.extend(self.eval2(&add, *x, *y)),
             Expression::Number(_, dividend, divisor) => values.push(Value::ComplexNumber(dividend, divisor, 0, 1)),
             Expression::ImaginaryConstant(_) => values.push(Value::ComplexNumber(0, 1, 1, 1)),
@@ -96,6 +101,15 @@ impl Evaluator {
         self.evaluate_expression(expr)
     }
 
+    fn eval1(&mut self, f: &dyn Fn(Value) -> Value, x_expr: Expression) -> Vec<Value> {
+        let x_values = self.evaluate_expression(x_expr);
+        let mut values = Vec::<Value>::new();
+        for x_value in x_values {
+            values.push(f(x_value));
+        }
+        values
+    }
+
     fn eval2(&mut self, f: &dyn Fn(Value, Value) -> Value, x_expr: Expression, y_expr: Expression) -> Vec<Value> {
         let x_values = self.evaluate_expression(x_expr);
         let y_values = self.evaluate_expression(y_expr);
@@ -119,6 +133,15 @@ fn multiply(x: Value, y: Value) -> Value {
             let df = bf;
             Value::ComplexNumber(af, bf, cf, df)
         },
+        _ => Value::ComplexNumber(0, 1, 0, 1),
+    }
+}
+
+fn negate(x: Value) -> Value {
+    match x {
+        Value::ComplexNumber(a, b, c, d) => {
+            Value::ComplexNumber(-a, b, -c, d)
+        }
         _ => Value::ComplexNumber(0, 1, 0, 1),
     }
 }
