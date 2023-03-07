@@ -29,6 +29,7 @@ impl Evaluator {
         let mut values = Vec::<Value>::new();
         match expr {
             Expression::Closure(_, x, f) => values.push(Value::Function(*x, *f)),
+            Expression::Multiply(_, x, y) => values.extend(self.eval2(&multiply, *x, *y)),
             Expression::Add(_, x, y) => values.extend(self.eval2(&add, *x, *y)),
             Expression::Number(_, dividend, divisor) => values.push(Value::ComplexNumber(dividend, divisor, 0, 1)),
             Expression::Boolean(b) => values.push(Value::Boolean(b)),
@@ -47,6 +48,20 @@ impl Evaluator {
             }
         }
         values
+    }
+}
+
+fn multiply(x: Value, y: Value) -> Value {
+    match (x, y) {
+        (Value::ComplexNumber(a1, b1, c1, d1), Value::ComplexNumber(a2, b2, c2, d2)) => {
+            // Real Segment
+            let af = a1 * a2 * d1 * d2 - c1 * c2 * b1 * b2;
+            let bf = b1 * b2 * d1 * d2;
+            let cf = a1 * c2 * b2 * d1 + a2 * c1 * b1 * d2;
+            let df = bf;
+            Value::ComplexNumber(af, bf, cf, df)
+        },
+        _ => Value::ComplexNumber(0, 1, 0, 1),
     }
 }
 
