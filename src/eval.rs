@@ -32,6 +32,7 @@ impl Evaluator {
             Expression::Multiply(_, x, y) => values.extend(self.eval2(&multiply, *x, *y)),
             Expression::Add(_, x, y) => values.extend(self.eval2(&add, *x, *y)),
             Expression::Number(_, dividend, divisor) => values.push(Value::ComplexNumber(dividend, divisor, 0, 1)),
+            Expression::ImaginaryConstant(_) => values.push(Value::ComplexNumber(0, 1, 1, 1)),
             Expression::Boolean(b) => values.push(Value::Boolean(b)),
             _ => {},
         }

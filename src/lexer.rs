@@ -19,6 +19,10 @@ impl Parser {
             "not" => Ok(Token::Not),
             "true" => Ok(Token::True),
             "false" => Ok(Token::False),
+            "i" => Ok(Token::ImaginaryConstant),
+            "pi" => Ok(Token::PiConstant),
+            "e" => Ok(Token::EulerConstant),
+            "phi" => Ok(Token::PhiConstant),
             _ => Ok(Token::Identifier(word)),
         }
     }

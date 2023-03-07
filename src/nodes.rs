@@ -3,6 +3,7 @@ use crate::tokens::LexError;
 #[derive(Clone, Debug)]
 pub enum Expression {
     Number(usize, isize, isize),
+    ImaginaryConstant(usize),
     Boolean(bool),
     Variable(usize, String),
     Function(usize, Box<Expression>, Box<Expression>),
