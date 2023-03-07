@@ -15,15 +15,19 @@ impl Evaluator {
     }
 
     pub fn evaluate(&mut self, code: String) -> Vec<Value> {
+        self.increase_scope();
         let mut parser = crate::parser::Parser::new(code);
+        let values;
         let expression_result = parser.parse();
         match expression_result {
-            Ok(expression) => self.evaluate_expression(expression),
+            Ok(expression) => values = self.evaluate_expression(expression),
             Err(e) => {
                 println!("Error: {:?}", e);
-                vec![]
+                return vec![];
             }
         }
+        self.decrease_scope();
+        values
     }
 
     fn evaluate_expression(&mut self, expr: Expression) -> Vec<Value> {
@@ -31,13 +35,23 @@ impl Evaluator {
         match expr {
             Expression::Define(_, l, r) => {
                 if let Expression::Variable(_, name) = *l {
-                    match self.definitions.last_mut() {
-                        Some(map) => {map.insert(name, *r.clone());},
-                        None => {},
-                    }
+                    self.definitions.first_mut().unwrap().insert(name, *r.clone());
                     values.extend(self.evaluate_expression(*r));
                 }
-            }
+            },
+            Expression::Function(_, f, x) => {
+                let function = self.evaluate_expression(*f)[0].clone();
+                match function {
+                    Value::Function(input, closure) => {
+                        if let Expression::Variable(_, name) = input {
+                            self.define(name, *x);
+                            values.extend(self.evaluate_expression(closure));
+                        }
+                    },
+                    _ => {},
+                }
+            },
+            
             Expression::Closure(_, x, f) => values.push(Value::Function(*x, *f)),
             Expression::Multiply(_, x, y) => values.extend(self.eval2(&multiply, *x, *y)),
             Expression::Add(_, x, y) => values.extend(self.eval2(&add, *x, *y)),
@@ -72,6 +86,14 @@ impl Evaluator {
 
     fn decrease_scope(&mut self) {
         self.definitions.pop();
+    }
+
+    fn define(&mut self, name: String, expr: Expression) -> Vec<Value> {
+        match self.definitions.last_mut() {
+            Some(map) => {map.insert(name, expr.clone());},
+            None => {},
+        }
+        self.evaluate_expression(expr)
     }
 
     fn eval2(&mut self, f: &dyn Fn(Value, Value) -> Value, x_expr: Expression, y_expr: Expression) -> Vec<Value> {
