@@ -5,6 +5,7 @@
 - [ ] Provide more detailed runtime errors
 - [ ] Implement function definitions (`f x = ...`)
 - [ ] Remove duplicate values in operator results
+- [ ] Add support for matrices/tuples
 - [ ] Create file runner
 - [ ] Make code more organized
 - [ ] Embed lua for functions and globals
