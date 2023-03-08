@@ -1,8 +1,8 @@
 # TODO
 
+- [x] Fix functions
+- [ ] Implement function definitions (`f x = ...`)
 - [ ] Remove duplicate values in operator results
-- [ ] Get rid of functions
-- [ ] Come up with a better solution for functions
 - [ ] Implement runtime errors
 - [ ] Create file runner
 - [ ] Make code more organized

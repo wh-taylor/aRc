@@ -4,7 +4,7 @@ use crate::values::Value;
 use crate::values::gcd;
 
 pub struct Evaluator {
-    definitions: Vec<HashMap<String, Expression>>,
+    definitions: Vec<HashMap<String, Vec<Value>>>,
 }
 
 impl Evaluator {
@@ -35,7 +35,8 @@ impl Evaluator {
         match expr {
             Expression::Define(_, l, r) => {
                 if let Expression::Variable(_, name) = *l {
-                    self.definitions.first_mut().unwrap().insert(name, *r.clone());
+                    let value = self.evaluate_expression(*r.clone());
+                    self.definitions.first_mut().unwrap().insert(name, value);
                     values.extend(self.evaluate_expression(*r));
                 }
             },
@@ -44,7 +45,8 @@ impl Evaluator {
                 match function {
                     Value::Function(input, closure) => {
                         if let Expression::Variable(_, name) = input {
-                            self.define(name, *x);
+                            let value = self.evaluate_expression(*x);
+                            self.define(name, value);
                             values.extend(self.evaluate_expression(closure));
                         }
                     },
@@ -67,7 +69,7 @@ impl Evaluator {
             Expression::Variable(_, name) => {
                 let result = self.get_definition(name);
                 match result {
-                    Some(expr) => values.extend(self.evaluate_expression(expr.clone())),
+                    Some(value) => values.extend(value),
                     None => {},
                 }
             },
@@ -77,7 +79,7 @@ impl Evaluator {
         values
     }
 
-    fn get_definition(&self, name: String) -> Option<Expression> {
+    fn get_definition(&self, name: String) -> Option<Vec<Value>> {
         for scope in self.definitions.iter().rev() {
             match scope.get(&name) {
                 Some(x) => return Some(x.clone()),
@@ -95,12 +97,12 @@ impl Evaluator {
         self.definitions.pop();
     }
 
-    fn define(&mut self, name: String, expr: Expression) -> Vec<Value> {
+    fn define(&mut self, name: String, values: Vec<Value>) -> Vec<Value> {
         match self.definitions.last_mut() {
-            Some(map) => {map.insert(name, expr.clone());},
+            Some(map) => {map.insert(name, values.clone());},
             None => {},
         }
-        self.evaluate_expression(expr)
+        values
     }
 
     fn eval1(&mut self, f: &dyn Fn(Value) -> Value, x_expr: Expression) -> Vec<Value> {
