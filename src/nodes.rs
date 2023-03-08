@@ -7,7 +7,6 @@ pub enum Expression {
     Boolean(bool),
     Variable(usize, String),
     Function(usize, Box<Expression>, Box<Expression>),
-    Differentiate(usize, Box<Expression>),
     Percent(usize, Box<Expression>),
     Factorial(usize, Box<Expression>),
     Power(usize, Box<Expression>, Box<Expression>),
