@@ -22,7 +22,6 @@ impl Evaluator {
     }
 
     pub fn evaluate(&mut self, code: String) -> Result<Vec<Value>, Error> {
-        self.increase_scope();
         let mut parser = crate::parser::Parser::new(code);
         let values;
         let expression_result = parser.parse();
@@ -33,7 +32,6 @@ impl Evaluator {
                 return Err(Error::ParseError(e));
             }
         }
-        self.decrease_scope();
         values
     }
 
@@ -41,20 +39,17 @@ impl Evaluator {
         let mut values = Vec::<Value>::new();
         match expr {
             Expression::Define(_, l, r) => {
-                if let Expression::Variable(_, name) = *l {
-                    let value = self.evaluate_expression(*r.clone())?;
-                    self.definitions.first_mut().unwrap().insert(name, value);
-                    values.extend(self.evaluate_expression(*r)?);
-                }
+                values.extend(self.define(*l, *r)?);
             },
             Expression::Function(_, f, x) => {
                 let function = self.evaluate_expression(*f.clone())?[0].clone();
                 match function {
                     Value::Function(input, closure) => {
-                        if let Expression::Variable(_, name) = input {
-                            let value = self.evaluate_expression(*x)?;
-                            self.define(name, value);
+                        if let Expression::Variable(_, _) = input {
+                            self.increase_scope();
+                            self.define(input, *x)?;
                             values.extend(self.evaluate_expression(closure)?);
+                            self.decrease_scope();
                         }
                     },
                     _ => values.extend(self.eval2(&multiply, *f, *x)?),
@@ -104,12 +99,17 @@ impl Evaluator {
         self.definitions.pop();
     }
 
-    fn define(&mut self, name: String, values: Vec<Value>) -> Vec<Value> {
-        match self.definitions.last_mut() {
-            Some(map) => {map.insert(name, values.clone());},
-            None => {},
+    fn define(&mut self, l: Expression, r: Expression) -> Result<Vec<Value>, Error> {
+        let mut values = Vec::<Value>::new();
+        match l {
+            Expression::Variable(_, name) => {
+                let value = self.evaluate_expression(r.clone())?;
+                self.definitions.last_mut().unwrap().insert(name, value);
+                values.extend(self.evaluate_expression(r)?);
+            },
+            _ => {},
         }
-        values
+        Ok(values)
     }
 
     fn eval1(&mut self, f: &dyn Fn(Value) -> Result<Vec<Value>, Error>, x_expr: Expression) -> Result<Vec<Value>, Error> {
