@@ -2,8 +2,8 @@
 
 - [x] Fix functions
 - [x] Implement runtime errors
+- [x] Implement function definitions (`f x = ...`)
 - [ ] Provide more detailed runtime errors
-- [ ] Implement function definitions (`f x = ...`)
 - [ ] Remove duplicate values in operator results
 - [ ] Add support for matrices/tuples
 - [ ] Create file runner

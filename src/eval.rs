@@ -39,7 +39,7 @@ impl Evaluator {
         let mut values = Vec::<Value>::new();
         match expr {
             Expression::Define(_, l, r) => {
-                values.extend(self.define(*l, *r)?);
+                values.extend(self.define(l, r)?);
             },
             Expression::Function(_, f, x) => {
                 let function = self.evaluate_expression(*f.clone())?[0].clone();
@@ -47,7 +47,7 @@ impl Evaluator {
                     Value::Function(input, closure) => {
                         if let Expression::Variable(_, _) = input {
                             self.increase_scope();
-                            self.define(input, *x)?;
+                            self.define(Box::new(input), x)?;
                             values.extend(self.evaluate_expression(closure)?);
                             self.decrease_scope();
                         }
@@ -99,13 +99,17 @@ impl Evaluator {
         self.definitions.pop();
     }
 
-    fn define(&mut self, l: Expression, r: Expression) -> Result<Vec<Value>, Error> {
+    fn define(&mut self, l: Box<Expression>, r: Box<Expression>) -> Result<Vec<Value>, Error> {
         let mut values = Vec::<Value>::new();
-        match l {
+        match *l {
             Expression::Variable(_, name) => {
-                let value = self.evaluate_expression(r.clone())?;
+                let value = self.evaluate_expression(*r.clone())?;
                 self.definitions.last_mut().unwrap().insert(name, value);
-                values.extend(self.evaluate_expression(r)?);
+                values.extend(self.evaluate_expression(*r)?);
+            },
+            Expression::Function(_, f, x) => {
+                let closure = Expression::Closure(0, x.clone(), r);
+                values.extend(self.define(f, Box::new(closure))?);
             },
             _ => {},
         }
