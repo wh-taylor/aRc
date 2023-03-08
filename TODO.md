@@ -1,9 +1,10 @@
 # TODO
 
 - [x] Fix functions
+- [x] Implement runtime errors
+- [ ] Provide more detailed runtime errors
 - [ ] Implement function definitions (`f x = ...`)
 - [ ] Remove duplicate values in operator results
-- [ ] Implement runtime errors
 - [ ] Create file runner
 - [ ] Make code more organized
 - [ ] Embed lua for functions and globals

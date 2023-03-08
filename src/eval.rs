@@ -1,7 +1,14 @@
 use std::collections::HashMap;
 use crate::nodes::Expression;
+use crate::nodes::ParseError;
 use crate::values::Value;
 use crate::values::gcd;
+
+#[derive(Debug)]
+pub enum Error {
+    ParseError(ParseError),
+    MismatchedType,
+}
 
 pub struct Evaluator {
     definitions: Vec<HashMap<String, Vec<Value>>>,
@@ -14,7 +21,7 @@ impl Evaluator {
         }
     }
 
-    pub fn evaluate(&mut self, code: String) -> Vec<Value> {
+    pub fn evaluate(&mut self, code: String) -> Result<Vec<Value>, Error> {
         self.increase_scope();
         let mut parser = crate::parser::Parser::new(code);
         let values;
@@ -23,47 +30,47 @@ impl Evaluator {
             Ok(expression) => values = self.evaluate_expression(expression),
             Err(e) => {
                 println!("Error: {:?}", e);
-                return vec![];
+                return Err(Error::ParseError(e));
             }
         }
         self.decrease_scope();
         values
     }
 
-    fn evaluate_expression(&mut self, expr: Expression) -> Vec<Value> {
+    fn evaluate_expression(&mut self, expr: Expression) -> Result<Vec<Value>, Error> {
         let mut values = Vec::<Value>::new();
         match expr {
             Expression::Define(_, l, r) => {
                 if let Expression::Variable(_, name) = *l {
-                    let value = self.evaluate_expression(*r.clone());
+                    let value = self.evaluate_expression(*r.clone())?;
                     self.definitions.first_mut().unwrap().insert(name, value);
-                    values.extend(self.evaluate_expression(*r));
+                    values.extend(self.evaluate_expression(*r)?);
                 }
             },
             Expression::Function(_, f, x) => {
-                let function = self.evaluate_expression(*f.clone())[0].clone();
+                let function = self.evaluate_expression(*f.clone())?[0].clone();
                 match function {
                     Value::Function(input, closure) => {
                         if let Expression::Variable(_, name) = input {
-                            let value = self.evaluate_expression(*x);
+                            let value = self.evaluate_expression(*x)?;
                             self.define(name, value);
-                            values.extend(self.evaluate_expression(closure));
+                            values.extend(self.evaluate_expression(closure)?);
                         }
                     },
-                    _ => values.extend(self.eval2(&multiply, *f, *x)),
+                    _ => values.extend(self.eval2(&multiply, *f, *x)?),
                 }
             },
             
             Expression::Closure(_, x, f) => values.push(Value::Function(*x, *f)),
-            Expression::Multiply(_, x, y) => values.extend(self.eval2(&multiply, *x, *y)),
-            Expression::Divide(_, x, y) => values.extend(self.eval2(&divide, *x, *y)),
+            Expression::Multiply(_, x, y) => values.extend(self.eval2(&multiply, *x, *y)?),
+            Expression::Divide(_, x, y) => values.extend(self.eval2(&divide, *x, *y)?),
             Expression::PlusMinus(_, x) => {
-                values.extend(self.eval1(&negate, *x.clone()));
-                values.extend(self.eval1(&|x| x, *x));
+                values.extend(self.eval1(&negate, *x.clone())?);
+                values.extend(self.eval1(&|x| Ok(vec![x]), *x)?);
             },
-            Expression::Negate(_, x) => values.extend(self.eval1(&negate, *x)),
-            Expression::Add(_, x, y) => values.extend(self.eval2(&add, *x, *y)),
-            Expression::Subtract(_, x, y) => values.extend(self.eval2(&subtract, *x, *y)),
+            Expression::Negate(_, x) => values.extend(self.eval1(&negate, *x)?),
+            Expression::Add(_, x, y) => values.extend(self.eval2(&add, *x, *y)?),
+            Expression::Subtract(_, x, y) => values.extend(self.eval2(&subtract, *x, *y)?),
             Expression::Number(_, dividend, divisor) => values.push(Value::ComplexNumber(dividend, divisor, 0, 1)),
             Expression::ImaginaryConstant(_) => values.push(Value::ComplexNumber(0, 1, 1, 1)),
             Expression::Variable(_, name) => {
@@ -76,7 +83,7 @@ impl Evaluator {
             Expression::Boolean(b) => values.push(Value::Boolean(b)),
             _ => {},
         }
-        values
+        Ok(values)
     }
 
     fn get_definition(&self, name: String) -> Option<Vec<Value>> {
@@ -105,29 +112,29 @@ impl Evaluator {
         values
     }
 
-    fn eval1(&mut self, f: &dyn Fn(Value) -> Value, x_expr: Expression) -> Vec<Value> {
-        let x_values = self.evaluate_expression(x_expr);
+    fn eval1(&mut self, f: &dyn Fn(Value) -> Result<Vec<Value>, Error>, x_expr: Expression) -> Result<Vec<Value>, Error> {
+        let x_values = self.evaluate_expression(x_expr)?;
         let mut values = Vec::<Value>::new();
         for x_value in x_values {
-            values.push(f(x_value));
+            values.extend(f(x_value)?);
         }
-        values
+        Ok(values)
     }
 
-    fn eval2(&mut self, f: &dyn Fn(Value, Value) -> Value, x_expr: Expression, y_expr: Expression) -> Vec<Value> {
-        let x_values = self.evaluate_expression(x_expr);
-        let y_values = self.evaluate_expression(y_expr);
+    fn eval2(&mut self, f: &dyn Fn(Value, Value) -> Result<Vec<Value>, Error>, x_expr: Expression, y_expr: Expression) -> Result<Vec<Value>, Error> {
+        let x_values = self.evaluate_expression(x_expr)?;
+        let y_values = self.evaluate_expression(y_expr)?;
         let mut values = Vec::<Value>::new();
         for x_value in x_values {
             for y_value in y_values.clone() {
-                values.push(f(x_value.clone(), y_value));
+                values.extend(f(x_value.clone(), y_value)?);
             }
         }
-        values
+        Ok(values)
     }
 }
 
-fn multiply(x: Value, y: Value) -> Value {
+fn multiply(x: Value, y: Value) -> Result<Vec<Value>, Error> {
     match (x, y) {
         (Value::ComplexNumber(a1, b1, c1, d1), Value::ComplexNumber(a2, b2, c2, d2)) => {
             // Real Segment
@@ -135,13 +142,13 @@ fn multiply(x: Value, y: Value) -> Value {
             let bf = b1 * b2 * d1 * d2;
             let cf = a1 * c2 * b2 * d1 + a2 * c1 * b1 * d2;
             let df = bf;
-            Value::ComplexNumber(af, bf, cf, df)
+            Ok(vec![Value::ComplexNumber(af, bf, cf, df)])
         },
-        _ => Value::ComplexNumber(0, 1, 0, 1),
+        _ => Err(Error::MismatchedType),
     }
 }
 
-fn divide(x: Value, y: Value) -> Value {
+fn divide(x: Value, y: Value) -> Result<Vec<Value>, Error> {
     match (x, y) {
         (Value::ComplexNumber(a1, b1, c1, d1), Value::ComplexNumber(a2, b2, c2, d2)) => {
             // Real Segment
@@ -149,22 +156,22 @@ fn divide(x: Value, y: Value) -> Value {
             let bf = b1 * d1 * (a2 * a2 * d2 * d2 + c2 * c2 * b2 * b2);
             let cf = b2 * d2 * (a2 * c1 * b1 * d2 + a1 * c2 * d1 * b2);
             let df = bf;
-            Value::ComplexNumber(af, bf, cf, df)
+            Ok(vec![Value::ComplexNumber(af, bf, cf, df)])
         },
-        _ => Value::ComplexNumber(0, 1, 0, 1),
+        _ => Err(Error::MismatchedType),
     }
 }
 
-fn negate(x: Value) -> Value {
+fn negate(x: Value) -> Result<Vec<Value>, Error> {
     match x {
         Value::ComplexNumber(a, b, c, d) => {
-            Value::ComplexNumber(-a, b, -c, d)
+            Ok(vec![Value::ComplexNumber(-a, b, -c, d)])
         }
-        _ => Value::ComplexNumber(0, 1, 0, 1),
+        _ => Err(Error::MismatchedType),
     }
 }
 
-fn add(x: Value, y: Value) -> Value {
+fn add(x: Value, y: Value) -> Result<Vec<Value>, Error> {
     match (x, y) {
         (Value::ComplexNumber(a1, b1, c1, d1), Value::ComplexNumber(a2, b2, c2, d2)) => {
             // Real Segment
@@ -179,13 +186,13 @@ fn add(x: Value, y: Value) -> Value {
             let cf1 = c1 * (lcmi / d1);
             let cf2 = c2 * (lcmi / d2);
             let cf = cf1 + cf2;
-            Value::ComplexNumber(af, bf, cf, df)
+            Ok(vec![Value::ComplexNumber(af, bf, cf, df)])
         },
-        _ => Value::ComplexNumber(0, 1, 0, 1),
+        _ => Err(Error::MismatchedType),
     }
 }
 
-fn subtract(x: Value, y: Value) -> Value {
+fn subtract(x: Value, y: Value) -> Result<Vec<Value>, Error> {
     match (x, y) {
         (Value::ComplexNumber(a1, b1, c1, d1), Value::ComplexNumber(a2, b2, c2, d2)) => {
             // Real Segment
@@ -200,8 +207,8 @@ fn subtract(x: Value, y: Value) -> Value {
             let cf1 = c1 * (lcmi / d1);
             let cf2 = c2 * (lcmi / d2);
             let cf = cf1 - cf2;
-            Value::ComplexNumber(af, bf, cf, df)
+            Ok(vec![Value::ComplexNumber(af, bf, cf, df)])
         },
-        _ => Value::ComplexNumber(0, 1, 0, 1),
+        _ => Err(Error::MismatchedType),
     }
 }
