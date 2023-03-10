@@ -41,7 +41,7 @@ impl Evaluator {
             Expression::Define(_, l, r) => {
                 values.extend(self.define(l, r)?);
             },
-            Expression::Function(_, f, x) => {
+            Expression::Call(_, f, x) => {
                 let function = self.evaluate_expression(*f.clone())?[0].clone();
                 match function {
                     Value::Function(input, closure) => {
@@ -69,7 +69,7 @@ impl Evaluator {
                 }
             },
             
-            Expression::Closure(_, x, f) => values.push(Value::Function(*x, *f)),
+            Expression::Function(_, x, f) => values.push(Value::Function(*x, *f)),
             Expression::Multiply(_, x, y) => values.extend(self.eval2(&multiply, *x, *y)?),
             Expression::Divide(_, x, y) => values.extend(self.eval2(&divide, *x, *y)?),
             Expression::PlusMinus(_, x) => {
@@ -128,8 +128,8 @@ impl Evaluator {
                 self.definitions.last_mut().unwrap().insert(name, value);
                 values.extend(self.evaluate_expression(*r)?);
             },
-            Expression::Function(_, f, x) => {
-                let closure = Expression::Closure(0, x.clone(), r);
+            Expression::Call(_, f, x) => {
+                let closure = Expression::Function(0, x.clone(), r);
                 values.extend(self.define(f, Box::new(closure))?);
             },
             _ => {},

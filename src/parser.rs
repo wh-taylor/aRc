@@ -42,7 +42,7 @@ impl Parser {
         match self.token() {
             Ok(Token::BigArrow) => {
                 self.iter_token();
-                Ok(Expression::Closure(self.index, Box::new(expr), Box::new(self.parse_closure()?)))
+                Ok(Expression::Function(self.index, Box::new(expr), Box::new(self.parse_closure()?)))
             },
             Ok(_) => Ok(expr),
             Err(e) => Err(ParseError::LexError(e)),
@@ -303,7 +303,7 @@ impl Parser {
                   | Token::PhiConstant
                   | Token::LeftParen) => {
                     let postfix = self.parse_postfix()?;
-                    expr = Expression::Function(self.index, Box::new(expr), Box::new(postfix));
+                    expr = Expression::Call(self.index, Box::new(expr), Box::new(postfix));
                 },
                 Ok(_) => break,
                 Err(e) => return Err(ParseError::LexError(e)),

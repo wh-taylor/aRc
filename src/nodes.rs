@@ -6,7 +6,7 @@ pub enum Expression {
     ImaginaryConstant(usize),
     Boolean(bool),
     Variable(usize, String),
-    Function(usize, Box<Expression>, Box<Expression>),
+    Call(usize, Box<Expression>, Box<Expression>),
     Percent(usize, Box<Expression>),
     Factorial(usize, Box<Expression>),
     Power(usize, Box<Expression>, Box<Expression>),
@@ -27,7 +27,7 @@ pub enum Expression {
     And(usize, Box<Expression>, Box<Expression>),
     Or(usize, Box<Expression>, Box<Expression>),
     Not(usize, Box<Expression>),
-    Closure(usize, Box<Expression>, Box<Expression>),
+    Function(usize, Box<Expression>, Box<Expression>),
     Define(usize, Box<Expression>, Box<Expression>),
 }
 
