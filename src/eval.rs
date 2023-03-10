@@ -45,11 +45,24 @@ impl Evaluator {
                 let function = self.evaluate_expression(*f.clone())?[0].clone();
                 match function {
                     Value::Function(input, closure) => {
-                        if let Expression::Variable(_, _) = input {
-                            self.increase_scope();
-                            self.define(Box::new(input), x)?;
-                            values.extend(self.evaluate_expression(closure)?);
-                            self.decrease_scope();
+                        match input {
+                            Expression::Variable(_, _) => {
+                                self.increase_scope();
+                                self.define(Box::new(input), x)?;
+                                values.extend(self.evaluate_expression(closure)?);
+                                self.decrease_scope();
+                            },
+                            Expression::Tuple(_, inputs) => {
+                                self.increase_scope();
+                                if let Expression::Tuple(_, elements) = *x {
+                                    for (input, element) in std::iter::zip(inputs, elements) {
+                                        self.define(Box::new(input), Box::new(element))?;
+                                    }
+                                }
+                                values.extend(self.evaluate_expression(closure)?);
+                                self.decrease_scope();
+                            }
+                            _ => {},
                         }
                     },
                     _ => values.extend(self.eval2(&multiply, *f, *x)?),
