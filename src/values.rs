@@ -6,6 +6,7 @@ pub enum Value {
     ComplexNumber(isize, isize, isize, isize),
     Boolean(bool),
     Function(Expression, Expression),
+    Tuple(Vec<Value>),
 }
 
 impl std::fmt::Debug for Value {
@@ -30,6 +31,18 @@ impl std::fmt::Debug for Value {
             Self::Boolean(true) => write!(f, "true : B"),
             Self::Boolean(false) => write!(f, "false : B"),
             Self::Function(a, b) => write!(f, "function {:?} -> {:?}", a, b),
+            Self::Tuple(xs) => {
+                write!(f, "(")?;
+                let mut iter = xs.iter().peekable();
+                while let Some(v) = iter.next() {
+                    if iter.peek().is_none() {
+                        write!(f, "{:?}", v)?;
+                    } else {
+                        write!(f, "{:?}, ", v)?;
+                    }
+                }
+                write!(f, "): Tuple")
+            },
         }
     }
 }

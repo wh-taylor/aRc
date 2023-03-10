@@ -76,6 +76,14 @@ impl Evaluator {
                 }
             },
             Expression::Boolean(b) => values.push(Value::Boolean(b)),
+            Expression::Tuple(_, xs) => {
+                let mut tuple_values = Vec::new();
+                for expr in xs {
+                    let value = self.evaluate_expression(expr)?;
+                    tuple_values.extend(value);
+                }
+                values.push(Value::Tuple(tuple_values))
+            },
             _ => {},
         }
         Ok(values)
