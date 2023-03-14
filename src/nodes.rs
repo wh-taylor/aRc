@@ -37,3 +37,41 @@ pub enum ParseError {
     NumberExpected,
     MissingClosingDelimiter,
 }
+
+impl std::fmt::Display for Expression {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Number(_, a, b) if *b == 1 => write!(f, "{}", a),
+            Self::Number(_, a, b) => write!(f, "{} / {}", a, b),
+            Self::ImaginaryConstant(_) => write!(f, "i"),
+            Self::Boolean(b) => write!(f, "{}", b),
+            Self::Variable(_, v) => write!(f, "{}", v),
+            Self::Call(_, x, y) => write!(f, "{} {}", x, y),
+            Self::Percent(_, x) => write!(f, "{}%", x),
+            Self::Factorial(_, x) => write!(f, "{}!", x),
+            Self::Power(_, x, y) => write!(f, "{}^{}", x, y),
+            Self::Compose(_, x, y) => write!(f, "{} . {}", x, y),
+            Self::Multiply(_, x, y) => write!(f, "{} * {}", x, y),
+            Self::Divide(_, x, y) => write!(f, "{} / {}", x, y),
+            Self::Negate(_, x) => write!(f, "-{}", x),
+            Self::PlusMinus(_, x) => write!(f, "+/-{}", x),
+            Self::Add(_, x, y) => match *y.clone() {
+                Self::PlusMinus(_, y) => write!(f, "{} +/- {}", x, y),
+                _ => write!(f, "{} + {}", x, y),
+            },
+            Self::Subtract(_, x, y) => write!(f, "{} - {}", x, y),
+            Self::Tuple(_, t) => write!(f, "({:?})", t),
+            Self::Equal(_, x, y) => write!(f, "{} == {}", x, y),
+            Self::NotEqual(_, x, y) => write!(f, "{} != {}", x, y),
+            Self::LessThan(_, x, y) => write!(f, "{} < {}", x, y),
+            Self::GreaterThan(_, x, y) => write!(f, "{} > {}", x, y),
+            Self::LessThanEqual(_, x, y) => write!(f, "{} <= {}", x, y),
+            Self::GreaterThanEqual(_, x, y) => write!(f, "{} >= {}", x, y),
+            Self::And(_, x, y) => write!(f, "{} and {}", x, y),
+            Self::Or(_, x, y) => write!(f, "{} or {}", x, y),
+            Self::Not(_, x) => write!(f, "not {}", x),
+            Self::Function(_, x, y) => write!(f, "{} => {}", x, y),
+            Self::Define(_, x, y) => write!(f, "{} = {}", x, y),
+        }
+    }
+}
