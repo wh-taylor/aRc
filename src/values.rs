@@ -1,7 +1,7 @@
 use crate::nodes::Expression;
 use gcd::Gcd;
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 pub enum Value {
     ComplexNumber(isize, isize, isize, isize),
     Boolean(bool),

@@ -1,6 +1,6 @@
 use crate::tokens::LexError;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum Expression {
     Number(usize, isize, isize),
     ImaginaryConstant(usize),

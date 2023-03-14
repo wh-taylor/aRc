@@ -112,6 +112,7 @@ impl Evaluator {
         for x_value in x_values {
             values.extend(f(x_value)?);
         }
+        values.dedup();
         Ok(values)
     }
 
@@ -124,6 +125,7 @@ impl Evaluator {
                 values.extend(f(x_value.clone(), y_value)?);
             }
         }
+        values.dedup();
         Ok(values)
     }
 }
