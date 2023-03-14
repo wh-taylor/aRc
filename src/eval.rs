@@ -41,35 +41,8 @@ impl Evaluator {
             Expression::Define(_, l, r) => {
                 values.extend(self.define(l, r)?);
             },
-            Expression::Call(_, f, x) => {
-                let function = self.evaluate_expression(*f.clone())?[0].clone();
-                match function {
-                    Value::Function(input, closure) => {
-                        match input {
-                            Expression::Variable(_, _) => {
-                                self.increase_scope();
-                                self.define(Box::new(input), x)?;
-                                values.extend(self.evaluate_expression(closure)?);
-                                self.decrease_scope();
-                            },
-                            Expression::Tuple(_, inputs) => {
-                                self.increase_scope();
-                                if let Expression::Tuple(_, elements) = *x {
-                                    for (input, element) in std::iter::zip(inputs, elements) {
-                                        self.define(Box::new(input), Box::new(element))?;
-                                    }
-                                }
-                                values.extend(self.evaluate_expression(closure)?);
-                                self.decrease_scope();
-                            }
-                            _ => {},
-                        }
-                    },
-                    _ => values.extend(self.eval2(&multiply, *f, *x)?),
-                }
-            },
-            
             Expression::Function(_, x, f) => values.push(Value::Function(*x, *f)),
+            Expression::Call(_, f, x) => values.extend(self.eval2(&call, *f, *x)?),
             Expression::Multiply(_, x, y) => values.extend(self.eval2(&multiply, *x, *y)?),
             Expression::Divide(_, x, y) => values.extend(self.eval2(&divide, *x, *y)?),
             Expression::PlusMinus(_, x) => {
@@ -112,11 +85,11 @@ impl Evaluator {
         None
     }
 
-    fn increase_scope(&mut self) {
+    fn _increase_scope(&mut self) {
         self.definitions.push(HashMap::new());
     }
 
-    fn decrease_scope(&mut self) {
+    fn _decrease_scope(&mut self) {
         self.definitions.pop();
     }
 
@@ -127,10 +100,6 @@ impl Evaluator {
                 let value = self.evaluate_expression(*r.clone())?;
                 self.definitions.last_mut().unwrap().insert(name, value);
                 values.extend(self.evaluate_expression(*r)?);
-            },
-            Expression::Call(_, f, x) => {
-                let closure = Expression::Function(0, x.clone(), r);
-                values.extend(self.define(f, Box::new(closure))?);
             },
             _ => {},
         }
@@ -156,6 +125,15 @@ impl Evaluator {
             }
         }
         Ok(values)
+    }
+}
+
+fn call(x: Value, y: Value) -> Result<Vec<Value>, Error> {
+    match (&x, &y) {
+        (Value::ComplexNumber(_, _, _, _), Value::ComplexNumber(_, _, _, _)) => {
+            multiply(x, y)
+        },
+        _ => Err(Error::MismatchedType),
     }
 }
 
