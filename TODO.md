@@ -4,7 +4,7 @@
 - [x] Implement runtime errors
 - [x] Implement function definitions (`f x = ...`)
 - [x] Remove duplicate values in operator results
-- [ ] Clean up REPL output
+- [x] Clean up REPL output
 - [ ] Implement conditional (`if <cond>`) and matching for functions
 - [ ] Implement sets (`{x | x <- R, x >= 0}`, `[0, inf)`, `C`) and set operators (`U`)
 - [ ] Add `for` for domain specification
