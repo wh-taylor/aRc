@@ -106,7 +106,7 @@ impl Expression {
             (And(i, a, b), _) => And(i, a.sub(old, new), b.sub(old, new)),
             (Or(i, a, b), _) => Or(i, a.sub(old, new), b.sub(old, new)),
             (Not(i, a), _) => Not(i, a.sub(old, new)),
-            (Function(_, _, _), _) => self.clone(),
+            (Function(i, x, f), _) => Function(i, x, f.sub(old, new)),
             (Define(i, a, b), _) => Define(i, a.sub(old, new), b.sub(old, new)),
         };
 

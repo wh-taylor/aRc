@@ -42,7 +42,7 @@ impl Evaluator {
                 values.extend(self.define(l, r)?);
             },
             Expression::Function(_, x, f) => values.push(Value::Function(*x, *f)),
-            Expression::Call(_, f, x) => values.extend(self.eval2(&call, *f, *x)?),
+            Expression::Call(_, f, x) => values.extend(self.call(*f, *x)?),
             Expression::Multiply(_, x, y) => values.extend(self.eval2(&multiply, *x, *y)?),
             Expression::Divide(_, x, y) => values.extend(self.eval2(&divide, *x, *y)?),
             Expression::PlusMinus(_, x) => {
@@ -106,6 +106,17 @@ impl Evaluator {
         Ok(values)
     }
 
+    fn call(&mut self, x: Expression, y: Expression) -> Result<Vec<Value>, Error> {
+        let x_values = self.evaluate_expression(x.clone())?;
+        match (&x_values[..], y.clone()) {
+            ([Value::Function(old, expr)], _) => {
+                let new_expr = expr.sub(&old, &y);
+                self.evaluate_expression(*new_expr)
+            },
+            _ => self.eval2(&multiply, x, y),
+        }
+    }
+
     fn eval1(&mut self, f: &dyn Fn(Value) -> Result<Vec<Value>, Error>, x_expr: Expression) -> Result<Vec<Value>, Error> {
         let x_values = self.evaluate_expression(x_expr)?;
         let mut values = Vec::<Value>::new();
@@ -127,15 +138,6 @@ impl Evaluator {
         }
         values.dedup();
         Ok(values)
-    }
-}
-
-fn call(x: Value, y: Value) -> Result<Vec<Value>, Error> {
-    match (&x, &y) {
-        (Value::ComplexNumber(_, _, _, _), Value::ComplexNumber(_, _, _, _)) => {
-            multiply(x, y)
-        },
-        _ => Err(Error::MismatchedType),
     }
 }
 
