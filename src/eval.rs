@@ -101,6 +101,10 @@ impl Evaluator {
                 self.definitions.last_mut().unwrap().insert(name, value);
                 values.extend(self.evaluate_expression(*r)?);
             },
+            Expression::Call(i, f, x) => {
+                let closure = Expression::Function(i, x.clone(), r);
+                values.extend(self.define(f, Box::new(closure))?);
+            },
             _ => {},
         }
         Ok(values)
