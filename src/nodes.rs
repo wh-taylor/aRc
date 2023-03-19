@@ -61,7 +61,18 @@ impl std::fmt::Display for Expression {
                 _ => write!(f, "{} + {}", x, y),
             },
             Subtract(_, x, y) => write!(f, "{} - {}", x, y),
-            Tuple(_, t) => write!(f, "({:?})", t),
+            Tuple(_, t) => {
+                write!(f, "(")?;
+                let mut tuple = t.iter().peekable();
+                while let Some(expr) = tuple.next() {
+                    if tuple.peek().is_none() {
+                        write!(f, "{}", expr)?;
+                    } else {
+                        write!(f, "{}, ", expr)?;
+                    }
+                }
+                write!(f, ")")
+            },
             Equal(_, x, y) => write!(f, "{} == {}", x, y),
             NotEqual(_, x, y) => write!(f, "{} != {}", x, y),
             LessThan(_, x, y) => write!(f, "{} < {}", x, y),
