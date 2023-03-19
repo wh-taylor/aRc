@@ -4,7 +4,6 @@ mod lexer;
 mod parser;
 mod values;
 mod eval;
-mod operators;
 mod repl;
 
 fn main() {
