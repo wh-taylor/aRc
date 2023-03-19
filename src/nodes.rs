@@ -1,4 +1,5 @@
 use crate::tokens::LexError;
+use Expression::*;
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum Expression {
@@ -41,37 +42,74 @@ pub enum ParseError {
 impl std::fmt::Display for Expression {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::Number(_, a, b) if *b == 1 => write!(f, "{}", a),
-            Self::Number(_, a, b) => write!(f, "{} / {}", a, b),
-            Self::ImaginaryConstant(_) => write!(f, "i"),
-            Self::Boolean(b) => write!(f, "{}", b),
-            Self::Variable(_, v) => write!(f, "{}", v),
-            Self::Call(_, x, y) => write!(f, "{} {}", x, y),
-            Self::Percent(_, x) => write!(f, "{}%", x),
-            Self::Factorial(_, x) => write!(f, "{}!", x),
-            Self::Power(_, x, y) => write!(f, "{}^{}", x, y),
-            Self::Compose(_, x, y) => write!(f, "{} . {}", x, y),
-            Self::Multiply(_, x, y) => write!(f, "{} * {}", x, y),
-            Self::Divide(_, x, y) => write!(f, "{} / {}", x, y),
-            Self::Negate(_, x) => write!(f, "-{}", x),
-            Self::PlusMinus(_, x) => write!(f, "+/-{}", x),
-            Self::Add(_, x, y) => match *y.clone() {
-                Self::PlusMinus(_, y) => write!(f, "{} +/- {}", x, y),
+            Number(_, a, b) if *b == 1 => write!(f, "{}", a),
+            Number(_, a, b) => write!(f, "{} / {}", a, b),
+            ImaginaryConstant(_) => write!(f, "i"),
+            Boolean(b) => write!(f, "{}", b),
+            Variable(_, v) => write!(f, "{}", v),
+            Call(_, x, y) => write!(f, "{} {}", x, y),
+            Percent(_, x) => write!(f, "{}%", x),
+            Factorial(_, x) => write!(f, "{}!", x),
+            Power(_, x, y) => write!(f, "{}^{}", x, y),
+            Compose(_, x, y) => write!(f, "{} . {}", x, y),
+            Multiply(_, x, y) => write!(f, "{} * {}", x, y),
+            Divide(_, x, y) => write!(f, "{} / {}", x, y),
+            Negate(_, x) => write!(f, "-{}", x),
+            PlusMinus(_, x) => write!(f, "+/-{}", x),
+            Add(_, x, y) => match *y.clone() {
+                PlusMinus(_, y) => write!(f, "{} +/- {}", x, y),
                 _ => write!(f, "{} + {}", x, y),
             },
-            Self::Subtract(_, x, y) => write!(f, "{} - {}", x, y),
-            Self::Tuple(_, t) => write!(f, "({:?})", t),
-            Self::Equal(_, x, y) => write!(f, "{} == {}", x, y),
-            Self::NotEqual(_, x, y) => write!(f, "{} != {}", x, y),
-            Self::LessThan(_, x, y) => write!(f, "{} < {}", x, y),
-            Self::GreaterThan(_, x, y) => write!(f, "{} > {}", x, y),
-            Self::LessThanEqual(_, x, y) => write!(f, "{} <= {}", x, y),
-            Self::GreaterThanEqual(_, x, y) => write!(f, "{} >= {}", x, y),
-            Self::And(_, x, y) => write!(f, "{} and {}", x, y),
-            Self::Or(_, x, y) => write!(f, "{} or {}", x, y),
-            Self::Not(_, x) => write!(f, "not {}", x),
-            Self::Function(_, x, y) => write!(f, "{} => {}", x, y),
-            Self::Define(_, x, y) => write!(f, "{} = {}", x, y),
+            Subtract(_, x, y) => write!(f, "{} - {}", x, y),
+            Tuple(_, t) => write!(f, "({:?})", t),
+            Equal(_, x, y) => write!(f, "{} == {}", x, y),
+            NotEqual(_, x, y) => write!(f, "{} != {}", x, y),
+            LessThan(_, x, y) => write!(f, "{} < {}", x, y),
+            GreaterThan(_, x, y) => write!(f, "{} > {}", x, y),
+            LessThanEqual(_, x, y) => write!(f, "{} <= {}", x, y),
+            GreaterThanEqual(_, x, y) => write!(f, "{} >= {}", x, y),
+            And(_, x, y) => write!(f, "{} and {}", x, y),
+            Or(_, x, y) => write!(f, "{} or {}", x, y),
+            Not(_, x) => write!(f, "not {}", x),
+            Function(_, x, y) => write!(f, "{} => {}", x, y),
+            Define(_, x, y) => write!(f, "{} = {}", x, y),
         }
+    }
+}
+
+impl Expression {
+    pub fn sub(&self, old: &Expression, new: &Expression) -> Box<Expression> {
+        let expr = match (self.clone(), old.clone()) {
+            (Variable(_, name), Variable(_, name2)) if name == name2 => new.clone(),
+            (Number(_, _, _), _) => self.clone(),
+            (ImaginaryConstant(_), _) => self.clone(),
+            (Boolean(_), _) => self.clone(),
+            (Variable(_, _), _) => self.clone(),
+            (Call(i, a, b), _) => Call(i, a.sub(old, new), b.sub(old, new)),
+            (Percent(i, a), _) => Percent(i, a.sub(old, new)),
+            (Factorial(i, a), _) => Factorial(i, a.sub(old, new)),
+            (Power(i, a, b), _) => Power(i, a.sub(old, new), b.sub(old, new)),
+            (Compose(i, a, b), _) => Compose(i, a.sub(old, new), b.sub(old, new)),
+            (Multiply(i, a, b), _) => Multiply(i, a.sub(old, new), b.sub(old, new)),
+            (Divide(i, a, b), _) => Divide(i, a.sub(old, new), b.sub(old, new)),
+            (Negate(i, a), _) => Negate(i, a.sub(old, new)),
+            (PlusMinus(i, a), _) => PlusMinus(i, a.sub(old, new)),
+            (Add(i, a, b), _) => Add(i, a.sub(old, new), b.sub(old, new)),
+            (Subtract(i, a, b), _) => Subtract(i, a.sub(old, new), b.sub(old, new)),
+            (Tuple(i, xs), _) => Tuple(i, xs.into_iter().map(|x| *x.sub(old, new)).collect()),
+            (Equal(i, a, b), _) => Equal(i, a.sub(old, new), b.sub(old, new)),
+            (NotEqual(i, a, b), _) => NotEqual(i, a.sub(old, new), b.sub(old, new)),
+            (LessThan(i, a, b), _) => LessThan(i, a.sub(old, new), b.sub(old, new)),
+            (GreaterThan(i, a, b), _) => GreaterThan(i, a.sub(old, new), b.sub(old, new)),
+            (LessThanEqual(i, a, b), _) => LessThanEqual(i, a.sub(old, new), b.sub(old, new)),
+            (GreaterThanEqual(i, a, b), _) => GreaterThanEqual(i, a.sub(old, new), b.sub(old, new)),
+            (And(i, a, b), _) => And(i, a.sub(old, new), b.sub(old, new)),
+            (Or(i, a, b), _) => Or(i, a.sub(old, new), b.sub(old, new)),
+            (Not(i, a), _) => Not(i, a.sub(old, new)),
+            (Function(_, _, _), _) => self.clone(),
+            (Define(i, a, b), _) => Define(i, a.sub(old, new), b.sub(old, new)),
+        };
+
+        Box::new(expr)
     }
 }
