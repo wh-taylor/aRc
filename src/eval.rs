@@ -113,12 +113,27 @@ impl Evaluator {
     fn call(&mut self, x: Expression, y: Expression) -> Result<Vec<Value>, Error> {
         let x_values = self.evaluate_expression(x.clone())?;
         match (&x_values[..], y.clone()) {
-            ([Value::Function(old, expr)], _) => {
-                let new_expr = expr.sub(&old, &y);
-                self.evaluate_expression(*new_expr)
-            },
+            ([Value::Function(param, expr)], _) => self.call_function(param, expr, y),
             _ => self.eval2(&multiply, x, y),
         }
+    }
+
+    fn call_function(&mut self, param: &Expression, expr: &Expression, y: Expression) -> Result<Vec<Value>, Error> {
+        let new_expr = match param {
+            Expression::Tuple(_, param_tuple) => {
+                if let Expression::Tuple(_, input_tuple) = y {
+                    let mut iter_expr = Box::new(expr.clone());
+                    for (param_item, input_item) in param_tuple.iter().zip(input_tuple) {
+                        iter_expr = iter_expr.sub(param_item, &input_item);
+                    }
+                    iter_expr
+                } else {
+                    return Err(Error::MismatchedType);
+                }
+            },
+            _ => expr.sub(param, &y),
+        };
+        self.evaluate_expression(*new_expr)
     }
 
     fn eval1(&mut self, f: &dyn Fn(Value) -> Result<Vec<Value>, Error>, x_expr: Expression) -> Result<Vec<Value>, Error> {
