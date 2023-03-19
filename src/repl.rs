@@ -16,8 +16,20 @@ impl Repl {
 
         loop {
             let input = self.get_input();
-            let values = self.evaluator.evaluate(input);
-            println!("{:?}\n", values);
+            let result = self.evaluator.evaluate(input);
+            match result {
+                Ok(values) => {
+                    let mut values_iter = values.iter().peekable();
+                    while let Some(value) = values_iter.next() {
+                        if values_iter.peek().is_none() {
+                            println!("{:?}\n", value);
+                        } else {
+                            print!("{:?}, ", value);
+                        }
+                    }
+                },
+                Err(_) => {},
+            }
         }
     }
 
